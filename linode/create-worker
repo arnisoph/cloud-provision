@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import requests
+from linode.api import Api
+
+#def query(action=None,
+#          command=None,
+#          args=None,
+#          method='GET',
+#          header_dict=None,
+#          data=None,
+#          url='https://api.linode.com/'):
+#    '''
+#    Make a web call to the Linode API.
+#    '''
+#    vm_ = get_configured_provider()
+#
+#    apikey = config.get_cloud_config_value(
+#        'apikey', vm_, __opts__, search_global=False
+#    )
+#
+#    if not isinstance(args, dict):
+#        args = {}
+#
+#    if 'api_key' not in args.keys():
+#        args['api_key'] = apikey
+#
+#    if action and 'api_action' not in args.keys():
+#        args['api_action'] = '{0}.{1}'.format(action, command)
+#
+#    if header_dict is None:
+#        header_dict = {}
+#
+#    if method != 'POST':
+#        header_dict['Accept'] = 'application/json'
+#
+#    decode = True
+#    if method == 'DELETE':
+#        decode = False
+#
+#    result = salt.utils.http.query(
+#        url,
+#        method,
+#        params=args,
+#        data=data,
+#        header_dict=header_dict,
+#        decode=decode,
+#        decode_type='json',
+#        text=True,
+#        status=True,
+#        hide_fields=['api_key', 'rootPass'],
+#        opts=__opts__,
+#    )
+#    log.debug(
+#        'Linode Response Status Code: {0}'.format(
+#            result['status']
+#        )
+#    )
+#
+#    return result['dict']
+
+
+def main():
+    ssh_key = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAEAQC4YsdZy138T4agvtG2c2eyuJIT414noFEMkUhTtNj8j6JoLQSllsgiqbHp7/+hvxybBTahdLXVPggqg31J8/Ma0vQpcsxdDTwTkdDmLFAFzw/zMKYznal1yF2CxG88eZ74BnMj3eDTG0U8MvqMggdJEvr1Qox04Uoae/GwVz4hJpgBwsrNWy41ZqIOJEwFsv+QufIIKzg3cyG8o5DmZbk7tj2vjQhFvNIpdCSjKC9U5ZedV95PxiXXHGbIRwcMC6loqgnjuaWAnuK+Ir73zoQt26XlJwc4loyzEp1mMoM31q61Ino5M9mDQtx1VTNfLy70q1HMkakS5+LitBIfJJr17ckGnKnefTHeRz/QYG6vsDuqLGioGL78RqMkmmq6FyC6zHFFy5Lzv7cxCrarybuxiiLeRVoLYQHVe7ZUDUyIKNTotrnwweuF3GHco3DC2kGwsaQ3BZkXn4ez0GAqULIhjLF/IIlGa8MhXwCpGly/T3oglY7VsyL6G9ZW0IbLOCclIhvOhhGu6Egn115K+FmNZWXYMKuSu7KfISXvjByz8SY5aoPXa3Kf04A3wc5bbNV98UN1eM7OEqV/Fmq/ZhG0SqMeHoxRjndZVnP8OaXWeGOXZIO88GCK1JCmoat9jqkb05UrdEwrHQEw+iQjIh1GScV0S9eO/wNZPLQ5fcBzkQ2Bmt3Zh8aYqokdoG/i/JtSGiNgEFk44piMNG1gtrWX2ZPGv379/3qEIr07WxRHve5DVabQ9LERNdy2elKlBocQxZLtb3Zo7pa9GrmbYrNyn5bY+NNj6EdMRLaaHG2yjhg0v2hhMSxeFXrBJO67vUJw8Q5Zs0bmAiYzRqfhRHn0pvPxpBV5FblZITzrpdpU/hc4SCNijO/S2/36yTsc1uk65oEcNTIo0HTvphdEZPbt3mOGlWwowN6OsZwNQB+bsuoWkCepDt1VGDWqHZLblEwlLsdaCgM4ieE3H3pRXLvg+tniVvQYjhydhZNuDYLojSF0TpZn9pRwHKvFYhu+wdujDwzAvS/37HiiLHbapHMO/kfeqePEq67nWHt74FBeLXiASOpORoAbVSJTf1E5g2feivgiJmvglAvEOihmeduj7hhyb8lsKnAHGEts0voBzS9kmzYNVb/W6HWm43OCjejvHGRF9Mcj3fdF62de7yI7t8T4yRqZS7exrt9gTNFe0NDfyX54OIOZwWB1n2hntd8Y/7wd+6vpBnD6P+h8zc5Jd30bsJa0ISrlYXvyvpW8y6B2q0sOHwC7UFJAuFyISq8wJ6vphk3Q+PLs4e9VjDURa6u4C3wPcUvNJIEb1s66aB/ai146PJavfpHrLNMCNV6WXWXSDKOP1RQ5WQHcH1Zf arnoldbechtoldt@arnoldbechtoldt-mb1.local'
+    parser = argparse.ArgumentParser()
+
+    # General args
+    parser.add_argument('--min',
+                        action='store',
+                        dest='min',
+                        type=int,
+                        default=0)
+    parser.add_argument('--max',
+                        action='store',
+                        dest='max',
+                        type=int,
+                        default=1)
+    parser.add_argument('--prefix',
+                        action='store',
+                        dest='prefix',
+                        default='node')
+    parser.add_argument('--plan',
+                        action='store',
+                        dest='plan',
+                        default='linode2048')
+    parser.add_argument('--location',
+                        action='store',
+                        dest='location',
+                        default='Frankfurt')
+    parser.add_argument('--password',
+                        action='store',
+                        dest='password',
+                        default='s4ltcl0udl1n123')
+    parser.add_argument('--pubkeyfile',
+                        action='store',
+                        dest='pubkeyfile',
+                        default='/Users/arnoldbechtoldt/.ssh/id_rsa.pub')
+
+    parser_results = parser.parse_args()
+    min_number = parser_results.min
+    max_number = parser_results.max
+    prefix = parser_results.prefix
+    plan = parser_results.plan
+    location = parser_results.location
+    password = parser_results.password
+    pubkeyfile = parser_results.pubkeyfile
+
+    linode = Api(key='', batching=True)
+
+    current_number = min_number
+    linodes_created = []
+    current_number = 1
+    while current_number < max_number:
+        if (max_number - current_number) < 10:
+            size = max_number - current_number
+        else:
+            size = 10
+
+        #print("size: {}".format(size))
+        inner_current_number = 0
+        while inner_current_number <= size:
+            #print("{}{} {} {}".format(prefix, current_number+inner_current_number, current_number, inner_current_number))
+            linode.linode_create(DatacenterID=10,
+                                 PlanID=2)
+            inner_current_number = inner_current_number + 1
+
+        result = linode.batchFlush()
+        print(result)
+
+        inner_current_number = 0
+        for new_linode in result:
+            linode_id = new_linode.get('DATA').get('LinodeID')
+            label = '{}{}'.format(prefix, current_number+inner_current_number)
+            inner_current_number = inner_current_number + 1
+
+            linode.linode_update(LinodeID=linode_id, Label=label)
+            linode.linode_disk_createfromdistribution(LinodeID=linode_id, DistributionID=130, rootPass=password, Label=label, Size=1024*10, rootSSHKey=ssh_key)
+
+        result = linode.batchFlush()
+        print(result)
+        print("--")
+
+        linodes = []
+        for new_linode in result:
+            if entry.get('ACTION') != 'linode.update':
+                continue
+            linode_id = new_linode.get('DATA').get('LinodeID')
+            label = '{}{}'.format(prefix, current_number+inner_current_number)
+
+            for entry in result:
+                if entry.get('ACTION') == 'linode.disk.createfromdistribution':
+                    disks = entry.get('DATA').get('DiskID')
+
+                #linode_id = new_linode.get('DATA').get('LinodeID')
+            linode.linode_config_create(LinodeID=linode_id, KernelID=227, Label=label, DiskList=disks)
+            #print(linode.linode_boot(LinodeID=linode_id))
+
+        result = linode.batchFlush()
+        print(result)
+        current_number = current_number + size
+
+
+if __name__ == '__main__':
+    exit(main())
+#min=$1
+#max=$2
+#prefix=$3
+#plan=$4
+#location=$5
+#password=$6
+#pubkeyfile=$7
+#
+#[[ -z $prefix ]] && prefix=node
+#[[ -z $plan ]] && plan=linode2048
+#[[ -z $location ]] && location=Frankfurt
+#[[ -z $password ]] && password=s4ltcl0udl1n123
+#[[ -z $pubkeyfile ]] && pubkeyfile=/Users/arnoldbechtoldt/.ssh/id_rsa.pub
+#
+#if [[ -z $min || -z $max ]]; then
+#  echo "not enough arguments set"
+#  exit 1
+#fi
+#
+#i=${min}
+#
+#while [[ $i -le $max ]]; do
+#  label=${prefix}${i}
+#  linode create ${label} --location ${location} --plan ${plan} --password ${password} --pubkey-file=${pubkeyfile}
+#  linode show ${label} --json > ${label}.json.tmp
+#  echo ${label} >> ${label}.tmp
+#  i=$((i+1))
+#done

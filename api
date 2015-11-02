@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+
+import salt.client as client
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--saltmaster',
+                        action='store',
+                        dest='saltmaster',
+                        default='127.0.0.1')
+    parser.add_argument('--target',
+                        action='store',
+                        dest='target',
+                        default='*')
+    parser.add_argument('--target-type',
+                        action='store',
+                        dest='--target_type',
+                        default='glob')
+    parser.add_argument('--fun',
+                        action='store',
+                        dest='fun',
+                        default='test.ping')
+    parser.add_argument('--fun_args',
+                        action='store',
+                        dest='fun_args',
+                        default=None)
+    parser.add_argument('--pillar',
+                        action='store',
+                        dest='pillar')
+
+    parser_results = parser.parse_args()
+    saltmaster = parser_results.saltmaster
+    fun = parser_results.fun
+    target = parser_results.target
+    target_type = parser_results.target_type
+    pillar = parser_results.pillar
+
+
+    cl = client.LocalClient()
+
+    cl.cmd(saltmaster,
+          fun,
+          [fun_args, pillar=pillar],
+          expr_form=target_type,
+          )

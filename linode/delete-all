@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for node in $(linode list | awk '{print $2}' | /usr/bin/grep -vE '^(-.*|label)$'); do
+  linode delete --label $node
+done
