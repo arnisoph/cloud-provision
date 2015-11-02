@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # ./create --token= --min=0 --max=0 --prefix=saltmaster --saltmaster
-# ./create --token= --min=0 --max=0 --prefix=fe --saltmaster_address=
 # ./create --token= --min=0 --max=0 --prefix=db --saltmaster_address=
+# ./create --token= --min=0 --max=0 --prefix=fe --saltmaster_address=
 # ./create --token= --min=1 --max=5 --prefix=mw --saltmaster_address= --image=centos-7-0-x64
 
 import base64
