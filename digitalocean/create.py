@@ -5,47 +5,39 @@
 # ./create --token= --min=0 --max=0 --prefix=fe --saltmaster_address=
 # ./create --token= --min=1 --max=5 --prefix=mw --saltmaster_address= --image=centos-7-0-x64
 
-import base64
-from binascii import hexlify
-import getpass
-import os
-import select
-import socket
-import sys
-import time
-import traceback
-from paramiko.py3compat import input
 import argparse
 import digitalocean
-import json
-import requests
+from time import sleep
 import paramiko
-from paramiko import SSHClient, PKey
-from rcontrol.ssh import SshSession, ssh_client
 from rcontrol.core import SessionManager
-
+from rcontrol.local import LocalSession
+from rcontrol.ssh import SshSession, ssh_client
+from collections import OrderedDict
 
 node_names = {}
+
 
 def sorted_dict(var):
     """
     Return a sorted dict as OrderedDict
     """
-    ret = collections.OrderedDict()
+    ret = OrderedDict()
     for key in sorted(list(var.keys())):
         ret[key] = var[key]
     return ret
 
 
-def install_salt(hostnames=None, username='root', password=None, port=22, master=False, master_address='127.0.0.1', image=None):
+def install_salt(script_url, hostnames=None, username='root', password=None, port=22, master=False, master_address='127.0.0.1', image=None):
     def log(task, line):
         pass
         #print("%r -> : %s" % (task, line))
 
     with SessionManager() as sessions:
+        sessions['local'] = LocalSession()
         for hostname in hostnames:
             try:
                 sessions[hostname] = SshSession(ssh_client(hostname, username, password))
+                sessions['local'].s_copy_file(script_url, sessions[hostname], '/var/tmp/bootstrap.sh')
             except TimeoutError as err:
                 print('Timeout during SSH authentication ({}), trying one last time ({})'.format(err, hostname))
                 time.sleep(10)
@@ -55,24 +47,16 @@ def install_salt(hostnames=None, username='root', password=None, port=22, master
                 time.sleep(10)
                 sessions[hostname] = SshSession(ssh_client(hostname, username, password))
 
-        if image == 'debian-7-0-x64':
-            command_download_salt = 'https://gist.github.com/bechtoldt/b4e3465d952941cc45d6/raw/92c6109049c2938ed9e984e19a556839151f49b3/prepare-deb.sh'
-        else:
-            command_download_salt = 'https://gist.github.com/bechtoldt/b4e3465d952941cc45d6/raw/92c6109049c2938ed9e984e19a556839151f49b3/prepare-el.sh'
-
         for hostname in hostnames:
-            command = 'export DEBIAN_FRONTEND=noninteractive; apt-get install -qy screen || yum install -y screen; wget -q {} -O prepare.sh 2>&1 1>/tmp/prepare.log; screen -dmS root bash prepare.sh {}'.format(command_download_salt, master_address)
+            command = ('export DEBIAN_FRONTEND=noninteractive; ' +
+                       'apt-get install -qy screen || yum install -y screen; ' +
+                       'wget -q {} -O prepare.sh 2>&1 1>/tmp/prepare.log; '.format(script_url) +
+                       'screen -dmS root bash /var/tmp/bootstrap.sh {} &> /tmp/vm-bootstrap.log'.format(master_address))
             print('Bootstrapping {} ({})'.format(node_names[hostname], hostname))
             sessions[hostname].execute(command, on_stderr=log, on_stdout=log)
 
 
 def main():
-    ssh_keys = [
-        1538974,
-        1538984,
-        1541762
-    ]
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--min',
@@ -96,7 +80,7 @@ def main():
     parser.add_argument('--location',
                         action='store',
                         dest='location',
-                        default='ams3')
+                        default='fra1')
     parser.add_argument('--image',
                         action='store',
                         dest='image',
@@ -121,6 +105,14 @@ def main():
                         action='store',
                         dest='token',
                         required=True)
+    parser.add_argument('--ssh-keys',
+                        action='store',
+                        dest='ssh_keys',
+                        required=True)
+    parser.add_argument('--script-url',
+                        action='store',
+                        dest='script_url',
+                        required=True)
 
     parser_results = parser.parse_args()
     min_number = parser_results.min
@@ -130,10 +122,16 @@ def main():
     location = parser_results.location
     image = parser_results.image
     password = parser_results.password
-    pubkeyfile = parser_results.pubkeyfile
+    #pubkeyfile = parser_results.pubkeyfile
     saltmaster = parser_results.saltmaster
     saltmaster_address = parser_results.saltmaster_address
     token = parser_results.token
+    _ssh_keys = parser_results.ssh_keys
+    script_url = parser_results.script_url
+
+    ssh_keys = []
+    for key_id in _ssh_keys.split(','):  # TODO use lambda?
+        ssh_keys.append(int(key_id))
 
     current_number = min_number
     new_nodes = []
@@ -177,8 +175,13 @@ def main():
             created_nodes_ids.append(_node.id)
 
         if install_nodes:
-            time.sleep(15)
-            install_salt(hostnames=install_nodes, password=password, master=saltmaster, master_address=saltmaster_address, image=image)
+            sleep(15)
+            install_salt(script_url,
+                         hostnames=install_nodes,
+                         password=password,
+                         master=saltmaster,
+                         master_address=saltmaster_address,
+                         image=image)
         else:
             time.sleep(5)
 
