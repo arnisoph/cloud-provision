@@ -2,8 +2,7 @@
 
 import argparse
 import digitalocean
-import json
-import requests
+
 
 def main():
     parser = argparse.ArgumentParser()

@@ -40,11 +40,11 @@ def install_salt(script_url, hostnames=None, username='root', password=None, por
                 sessions['local'].s_copy_file(script_url, sessions[hostname], '/var/tmp/bootstrap.sh')
             except TimeoutError as err:
                 print('Timeout during SSH authentication ({}), trying one last time ({})'.format(err, hostname))
-                time.sleep(10)
+                sleep(10)
                 sessions[hostname] = SshSession(ssh_client(hostname, username, password))
             except paramiko.ssh_exception.AuthenticationException as err:
                 print('Failed to authenticate ({}), trying one last time ({})'.format(err, hostname))
-                time.sleep(10)
+                sleep(10)
                 sessions[hostname] = SshSession(ssh_client(hostname, username, password))
 
         for hostname in hostnames:
@@ -154,7 +154,7 @@ def main():
     for node in new_nodes:
         print("Creating node {}".format(node.name))
         node.create()
-        time.sleep(0.5)
+        sleep(0.5)
         all_nodes_ids.append(node.id)
 
     created_nodes_ids = []
@@ -183,7 +183,7 @@ def main():
                          master_address=saltmaster_address,
                          image=image)
         else:
-            time.sleep(5)
+            sleep(5)
 
 
 if __name__ == '__main__':
