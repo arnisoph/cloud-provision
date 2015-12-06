@@ -9,7 +9,7 @@ import argparse
 import digitalocean
 from time import sleep
 import paramiko
-from rcontrol.core import SessionManager
+from rcontrol.core import SessionManager, TimeoutError
 from rcontrol.local import LocalSession
 from rcontrol.ssh import SshSession, ssh_client
 from collections import OrderedDict
