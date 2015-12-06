@@ -173,7 +173,7 @@ def main():
             if _node.status != 'active':
                 continue
             install_nodes.append(_node.ip_address)
-            node_names[_node.ip_address] = _node.name #TODO use install_nodes (OrderedDict)
+            node_names[_node.ip_address] = _node.name  # TODO use install_nodes (OrderedDict)
             created_nodes_ids.append(_node.id)
 
         if install_nodes:
