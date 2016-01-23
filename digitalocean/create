@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-# ./create --token= --min=0 --max=0 --prefix=saltmaster --saltmaster
-# ./create --token= --min=0 --max=0 --prefix=db --saltmaster_address=
-# ./create --token= --min=0 --max=0 --prefix=fe --saltmaster_address=
+# ./create --token= --min=1 --max=1 --prefix=saltmaster --saltmaster
+# ./create --token= --min=1 --max=1 --prefix=db --saltmaster_address=
+# ./create --token= --min=1 --max=3 --prefix=fe --saltmaster_address=
 # ./create --token= --min=1 --max=5 --prefix=mw --saltmaster_address= --image=centos-7-0-x64
 
 import base64
@@ -68,9 +68,9 @@ def install_salt(hostnames=None, username='root', password=None, port=22, master
 
 def main():
     ssh_keys = [
-        1538974,
-        1538984,
-        1541762
+        'fb:b8:ac:45:be:fb:70:19:6f:f3:2e:d3:48:b2:b2:1c',
+        '65:27:f0:4c:35:a8:8f:86:0a:01:d5:c1:db:63:f8:66',
+        'cb:f4:55:fe:57:21:43:5f:9e:9e:b7:05:36:22:d7:04'
     ]
 
     parser = argparse.ArgumentParser()
