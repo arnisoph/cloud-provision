@@ -57,12 +57,6 @@ def install_salt(script_url, hostnames=None, username='root', password=None, por
 
 
 def main():
-    ssh_keys = [
-        'fb:b8:ac:45:be:fb:70:19:6f:f3:2e:d3:48:b2:b2:1c',
-        '65:27:f0:4c:35:a8:8f:86:0a:01:d5:c1:db:63:f8:66',
-        'cb:f4:55:fe:57:21:43:5f:9e:9e:b7:05:36:22:d7:04'
-    ]
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--min',
@@ -135,9 +129,9 @@ def main():
     _ssh_keys = parser_results.ssh_keys
     script_url = parser_results.script_url
 
-    #ssh_keys = []
-    #for key_id in _ssh_keys.split(','):  # TODO use lambda?
-    #    ssh_keys.append(int(key_id))
+    ssh_keys = []
+    for key_fp in _ssh_keys.split(','):
+        ssh_keys.append(key_fp)
 
     current_number = min_number
     new_nodes = []
