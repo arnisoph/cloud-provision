@@ -1,4 +1,4 @@
-ecdsa==0.13
+ecdsa==0.13.3
 -e git+https://github.com/bechtoldt/linode-python@d06414c68b529ac055ede5fd72bedc69e241f087#egg=linode_python-origin_workarounds
 paramiko==1.15.3
 pluggy==0.3.1
